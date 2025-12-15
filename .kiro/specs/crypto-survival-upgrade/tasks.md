@@ -1,0 +1,143 @@
+# Implementation Plan
+
+- [x] 1. 扩展数据模型和类型定义
+  - [x] 1.1 创建 psychologyData.ts 文件，定义 DimensionScores、SurvivalRating、PsychologicalIssue、Recommendation 等核心类型
+    - 定义所有心理维度相关的 TypeScript 接口
+    - 定义生存评级枚举和阈值常量
+    - _Requirements: 1.3, 1.4, 2.5_
+  - [x] 1.2 扩展 Option 接口为 EnhancedOption，添加 dimensions 和 madnessImpact 字段
+    - 在 gameData.ts 中扩展现有 Option 接口
+    - 保持向后兼容性
+    - _Requirements: 6.4, 8.3_
+  - [ ]* 1.3 编写属性测试验证 EnhancedOption 数据完整性
+    - **Property 11: Option Dimension Completeness**
+    - **Validates: Requirements 6.4**
+
+- [x] 2. 实现 ScoreCalculator 核心计算引擎
+  - [x] 2.1 实现 calculateTagScores 函数（保持现有逻辑兼容）
+    - 确保与现有 calculateResult 函数行为一致
+    - _Requirements: 8.2_
+  - [x] 2.2 实现 calculateDimensionScores 函数
+    - 基于 TAG_DIMENSION_MAPPING 计算各维度得分
+    - 确保返回所有四个核心维度
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [ ]* 2.3 编写属性测试验证双重得分计算
+    - **Property 1: Dual Score Calculation**
+    - **Validates: Requirements 1.2**
+  - [x] 2.4 实现 calculateMadnessScore 函数
+    - 基于维度得分计算疯狂指数 (0-100)
+    - _Requirements: 1.3_
+  - [ ]* 2.5 编写属性测试验证疯狂指数范围
+    - **Property 2: Madness Score Range**
+    - **Validates: Requirements 1.3**
+  - [x] 2.6 实现 calculateSurvivalRating 函数
+    - 基于疯狂指数映射到生存评级
+    - _Requirements: 1.4_
+  - [ ]* 2.7 编写属性测试验证生存评级映射
+    - **Property 3: Survival Rating Mapping**
+    - **Validates: Requirements 1.4**
+  - [ ]* 2.8 编写属性测试验证维度计算完整性
+    - **Property 5: Complete Dimension Calculation**
+    - **Validates: Requirements 2.5**
+
+- [x] 3. Checkpoint - 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 4. 实现 PsychologyEngine 心理分析引擎
+  - [x] 4.1 实现 identifyPsychologicalIssues 函数
+    - 基于维度得分识别核心心理问题
+    - 返回最多 3 个最突出的问题
+    - _Requirements: 3.3, 7.1_
+  - [ ]* 4.2 编写属性测试验证问题识别数量限制
+    - **Property 12: Top Issues Limit**
+    - **Validates: Requirements 7.1**
+  - [x] 4.3 实现 generateRecommendations 函数
+    - 为每个心理问题生成 2-3 条改善建议
+    - _Requirements: 3.5, 7.2_
+  - [ ]* 4.4 编写属性测试验证建议数量
+    - **Property 13: Recommendation Count Per Issue**
+    - **Validates: Requirements 7.2**
+  - [ ]* 4.5 编写属性测试验证问题-建议配对
+    - **Property 7: Issue-Recommendation Pairing**
+    - **Validates: Requirements 3.5**
+  - [x] 4.6 实现 generateDiagnosisReport 函数
+    - 整合所有分析结果生成完整诊断报告
+    - _Requirements: 3.1, 3.2_
+  - [ ]* 4.7 编写属性测试验证诊断报告完整性
+    - **Property 6: Diagnosis Report Completeness**
+    - **Validates: Requirements 3.1**
+
+- [x] 5. 实现 Tag 分布和分享功能
+  - [x] 5.1 实现 calculateTagDistribution 函数
+    - 计算各 Tag 类型的分布百分比
+    - 确保百分比总和为 100%
+    - _Requirements: 4.4_
+  - [ ]* 5.2 编写属性测试验证 Tag 分布总和
+    - **Property 8: Tag Distribution Sum**
+    - **Validates: Requirements 4.4**
+  - [x] 5.3 实现 generateShareText 函数
+    - 生成包含疯狂指数、人格类型、生存评级的分享文案
+    - _Requirements: 4.5_
+  - [ ]* 5.4 编写属性测试验证分享文案生成
+    - **Property 9: Share Text Generation**
+    - **Validates: Requirements 4.5**
+
+- [x] 6. Checkpoint - 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 7. 实现 UI 组件
+  - [x] 7.1 创建 MadnessBar 组件
+    - 实现疯狂指数进度条
+    - 支持动画效果和警告状态
+    - _Requirements: 5.1, 5.2, 5.3_
+  - [ ]* 7.2 编写属性测试验证警告状态阈值
+    - **Property 10: Warning State Threshold**
+    - **Validates: Requirements 5.3**
+  - [x] 7.3 创建 RadarChart 组件
+    - 实现多维度得分雷达图
+    - 使用 SVG 或 Canvas 绘制
+    - _Requirements: 3.2, 4.3_
+  - [x] 7.4 升级 ResultCard 组件
+    - 左侧显示人格类型和毒舌点评
+    - 右侧显示数据面板（疯狂指数、生存评级、维度得分）
+    - 集成雷达图和 Tag 分布
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [x] 8. 集成到 SurvivalGame 主组件
+  - [x] 8.1 添加疯狂指数状态管理
+    - 新增 madnessScore、dimensionScores 状态
+    - 在 handleNext 中更新状态
+    - _Requirements: 1.2, 5.1_
+  - [x] 8.2 集成 MadnessBar 到游戏界面
+    - 在进度条下方显示疯狂指数
+    - _Requirements: 5.1, 5.2_
+  - [x] 8.3 升级结果页面
+    - 集成新的 ResultCard 组件
+    - 显示完整诊断报告
+    - _Requirements: 1.5, 4.1, 4.2_
+  - [x] 8.4 添加分享功能
+    - 实现一键复制分享文案
+    - _Requirements: 4.5_
+
+- [-] 9. 为现有选项添加心理维度数据
+  - [x] 9.1 为 identity 关卡选项添加 dimensions 数据
+    - 基于 TAG_DIMENSION_MAPPING 为每个选项设置维度影响值
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.4_
+  - [x] 9.2 为 action 关卡选项添加 dimensions 数据
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.4_
+  - [x] 9.3 为 mental 关卡选项添加 dimensions 数据
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.4_
+  - [ ]* 9.4 编写属性测试验证 Tag 维度影响
+    - **Property 4: Tag Dimension Impact**
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
+
+- [x] 10. 兼容性验证
+  - [x] 10.1 验证现有 calculateResult 函数仍然有效
+    - 确保升级不破坏原有功能
+    - _Requirements: 8.2, 8.5_
+  - [ ]* 10.2 编写属性测试验证 calculateResult 兼容性
+    - **Property 14: Calculate Result Compatibility**
+    - **Validates: Requirements 8.2**
+
+- [ ] 11. Final Checkpoint - 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.
