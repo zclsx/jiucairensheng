@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QUESTIONS, calculateResult, Result } from '@/data/gameData';
 import { Minus, Square, X } from 'lucide-react';
 import { DimensionScores, DEFAULT_DIMENSION_SCORES, SurvivalRating, PsychologicalIssue, Recommendation } from '@/data/psychologyData';
-import { calculateDimensionScores, calculateMadnessScore, calculateSurvivalRating, calculateTagScores } from '@/data/scoreCalculator';
+import { calculateDimensionScores, calculateMadnessScore, calculateMadnessScoreFromSelections, calculateSurvivalRating, calculateTagScores } from '@/data/scoreCalculator';
 import { calculateTagDistribution, identifyPsychologicalIssues, generateRecommendations, generateShareText } from '@/data/psychologyEngine';
 import MadnessBar from './MadnessBar';
 import ResultCard from './ResultCard';
@@ -47,19 +47,22 @@ export default function SurvivalGame() {
     
     // Update dimension scores and madness score in real-time (Requirements: 1.2, 5.1)
     const newDimensionScores = calculateDimensionScores(newHistory);
-    const newMadnessScore = calculateMadnessScore(newDimensionScores);
+    // 使用基于选项的疯狂指数计算
+    const newMadnessScore = calculateMadnessScoreFromSelections(newHistory);
     setDimensionScores(newDimensionScores);
     setMadnessScore(newMadnessScore);
     
     if (isLastStage) {
-      // Calculate final results
+      // Calculate final results - 人格匹配基于 tag 统计
       const finalResult = calculateResult(newHistory);
-      const finalSurvivalRating = calculateSurvivalRating(newMadnessScore);
+      // 生存评级基于疯狂指数
+      const finalMadnessScore = calculateMadnessScoreFromSelections(newHistory);
+      const finalSurvivalRating = calculateSurvivalRating(finalMadnessScore);
       const tagScores = calculateTagScores(newHistory);
       const finalTagDistribution = calculateTagDistribution(tagScores);
       const finalIssues = identifyPsychologicalIssues(newDimensionScores);
       const finalRecommendations = generateRecommendations(finalIssues);
-      const finalShareText = generateShareText(finalResult, newMadnessScore, finalSurvivalRating);
+      const finalShareText = generateShareText(finalResult, finalMadnessScore, finalSurvivalRating);
       
       setResult(finalResult);
       setSurvivalRating(finalSurvivalRating);

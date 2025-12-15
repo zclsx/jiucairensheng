@@ -456,13 +456,39 @@ export const RESULTS: Record<TagType, Result> = {
   },
 };
 
-const optionLookup = new Map<string, Option>();
+// 构建选项查找表
+const optionLookup = new Map<string, EnhancedOption>();
 QUESTIONS.forEach((q) => {
   q.options.forEach((opt) => {
     optionLookup.set(opt.id, opt);
   });
 });
 
+// 获取选项详情
+export function getOptionById(id: string): EnhancedOption | undefined {
+  return optionLookup.get(id);
+}
+
+// 人格权重配置 - 某些人格更"极端"，需要更高的阈值
+const PERSONALITY_WEIGHTS: Record<TagType, number> = {
+  degen: 1.0,    // 赌狗 - 标准权重
+  rekt: 1.0,     // 冤种 - 标准权重
+  holder: 1.1,   // 死拿 - 稍微难匹配
+  slave: 1.0,    // 撸毛 - 标准权重
+  shark: 1.3,    // 镰刀 - 需要更多证据才能判定
+  normie: 0.9,   // 萌新 - 容易匹配
+  midcurve: 1.1, // 中智商 - 稍微难匹配
+  simp: 1.0,     // 舔狗 - 标准权重
+  maxi: 1.1,     // 极端主义 - 稍微难匹配
+  larper: 1.0,   // 装逼犯 - 标准权重
+  dev: 1.2,      // 开发者 - 需要更多证据
+  npc: 0.9,      // 气氛组 - 容易匹配
+};
+
+/**
+ * 计算人格结果 - 基于选项的 tag 统计
+ * 20个选择中，哪个 tag 出现最多就是你的人格
+ */
 export function calculateResult(selectedIds: string[]): Result {
   const scores: Record<TagType, number> = {
     degen: 0,
@@ -479,6 +505,7 @@ export function calculateResult(selectedIds: string[]): Result {
     npc: 0,
   };
 
+  // 统计每个 tag 的出现次数
   selectedIds.forEach((id) => {
     const opt = optionLookup.get(id);
     if (opt) {
@@ -486,9 +513,50 @@ export function calculateResult(selectedIds: string[]): Result {
     }
   });
 
-  const [topTag] =
-    Object.entries(scores).sort((a, b) => b[1] - a[1]).find(([, score]) => score > 0) ??
-    Object.entries(scores)[0];
+  // 应用权重调整
+  const weightedScores = Object.entries(scores).map(([tag, score]) => ({
+    tag: tag as TagType,
+    rawScore: score,
+    weightedScore: score / PERSONALITY_WEIGHTS[tag as TagType],
+  }));
 
-  return RESULTS[topTag as TagType];
+  // 按加权分数排序，取最高的
+  weightedScores.sort((a, b) => b.weightedScore - a.weightedScore);
+  
+  // 如果最高分为0，返回默认人格 (normie)
+  const topResult = weightedScores[0];
+  if (topResult.rawScore === 0) {
+    return RESULTS.normie;
+  }
+
+  return RESULTS[topResult.tag];
+}
+
+/**
+ * 获取人格分布详情 - 用于显示雷达图等
+ */
+export function getPersonalityDistribution(selectedIds: string[]): Record<TagType, { count: number; percentage: number }> {
+  const scores: Record<TagType, number> = {
+    degen: 0, rekt: 0, holder: 0, slave: 0, shark: 0, normie: 0,
+    midcurve: 0, simp: 0, maxi: 0, larper: 0, dev: 0, npc: 0,
+  };
+
+  selectedIds.forEach((id) => {
+    const opt = optionLookup.get(id);
+    if (opt) {
+      scores[opt.tag] += 1;
+    }
+  });
+
+  const total = selectedIds.length || 1;
+  const distribution: Record<TagType, { count: number; percentage: number }> = {} as any;
+  
+  (Object.keys(scores) as TagType[]).forEach((tag) => {
+    distribution[tag] = {
+      count: scores[tag],
+      percentage: Math.round((scores[tag] / total) * 100),
+    };
+  });
+
+  return distribution;
 }

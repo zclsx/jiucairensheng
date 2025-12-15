@@ -17,13 +17,13 @@ export type SurvivalRating =
   | '镰刀预备役'     // madness 20-39
   | '终极镰刀';      // madness < 20
 
-// 生存评级阈值常量
+// 生存评级阈值常量 (调整后让分布更合理)
 export const SURVIVAL_RATING_THRESHOLDS = {
-  LEEK: 80,           // 韭菜: >= 80
-  OLD_LEEK: 60,       // 老韭菜: 60-79
-  LEEK_KING: 40,      // 韭菜王: 40-59
-  SICKLE_TRAINEE: 20, // 镰刀预备役: 20-39
-  ULTIMATE_SICKLE: 0, // 终极镰刀: < 20
+  LEEK: 75,           // 韭菜: >= 75 (最惨)
+  OLD_LEEK: 55,       // 老韭菜: 55-74
+  LEEK_KING: 40,      // 韭菜王: 40-54
+  SICKLE_TRAINEE: 25, // 镰刀预备役: 25-39
+  ULTIMATE_SICKLE: 0, // 终极镰刀: < 25 (最强)
 } as const;
 
 // 心理问题严重程度
@@ -76,40 +76,40 @@ export interface DimensionConfig {
   criticalThreshold: number;
 }
 
-// 维度配置常量
+// 维度配置常量 (Savage Edition)
 export const DIMENSIONS: DimensionConfig[] = [
   { 
     id: 'riskAppetite', 
-    name: '风险偏好', 
-    description: '你对高风险投资的渴望程度', 
+    name: '送钱欲望', 
+    description: '你有多想把钱送给项目方', 
     warningThreshold: 60, 
     criticalThreshold: 80 
   },
   { 
     id: 'emotionalControl', 
-    name: '情绪控制', 
-    description: '你在市场波动时的情绪稳定性', 
+    name: '心态稳定', 
+    description: '你看到红色K线时能不能忍住不骂娘', 
     warningThreshold: 40, 
     criticalThreshold: 20 
   },
   { 
     id: 'cognitiveBias', 
-    name: '认知偏差', 
-    description: '你受各种心理偏差影响的程度', 
+    name: '脑残程度', 
+    description: '你被 Copium 洗脑的严重程度', 
     warningThreshold: 60, 
     criticalThreshold: 80 
   },
   { 
     id: 'socialDependency', 
-    name: '社交依赖', 
-    description: '你依赖他人意见做决策的程度', 
+    name: '舔狗指数', 
+    description: '你有多依赖 KOL 喂饭', 
     warningThreshold: 60, 
     criticalThreshold: 80 
   },
   { 
     id: 'greedIndex', 
     name: '贪婪指数', 
-    description: '你对暴富的渴望程度', 
+    description: '你离 Lambo 的妄想有多严重', 
     warningThreshold: 70, 
     criticalThreshold: 85 
   },
@@ -127,18 +127,18 @@ export const DEFAULT_DIMENSION_SCORES: DimensionScores = {
   greedIndex: 50,
 };
 
-// Tag 类型与维度映射
+// Tag 类型与维度映射 (降低影响值，20个选项不会轻易爆表)
 export const TAG_DIMENSION_MAPPING: Record<TagType, Partial<DimensionScores>> = {
-  degen: { riskAppetite: 15, emotionalControl: -10, greedIndex: 12 },
-  rekt: { riskAppetite: -5, emotionalControl: -15, cognitiveBias: 10 },
-  holder: { riskAppetite: -5, emotionalControl: 10, greedIndex: -5 },
-  slave: { socialDependency: 8, emotionalControl: -8, greedIndex: 5 },
-  shark: { riskAppetite: 10, emotionalControl: 15, cognitiveBias: -5 },
-  normie: { riskAppetite: -10, socialDependency: 12, cognitiveBias: 5 },
-  midcurve: { cognitiveBias: 15, emotionalControl: -5, socialDependency: -5 },
-  simp: { socialDependency: 18, emotionalControl: -8, cognitiveBias: 10 },
-  maxi: { riskAppetite: 12, cognitiveBias: 15, socialDependency: -10 },
-  larper: { socialDependency: 10, cognitiveBias: 8, greedIndex: 8 },
-  dev: { riskAppetite: 8, emotionalControl: 5, cognitiveBias: -8 },
-  npc: { socialDependency: 15, emotionalControl: -5, cognitiveBias: 12 },
+  degen: { riskAppetite: 4, emotionalControl: -3, greedIndex: 3 },
+  rekt: { riskAppetite: -2, emotionalControl: -4, cognitiveBias: 3 },
+  holder: { riskAppetite: -2, emotionalControl: 3, greedIndex: -2 },
+  slave: { socialDependency: 2, emotionalControl: -2, greedIndex: 2 },
+  shark: { riskAppetite: 3, emotionalControl: 4, cognitiveBias: -2 },
+  normie: { riskAppetite: -3, socialDependency: 3, cognitiveBias: 2 },
+  midcurve: { cognitiveBias: 4, emotionalControl: -2, socialDependency: -2 },
+  simp: { socialDependency: 5, emotionalControl: -2, cognitiveBias: 3 },
+  maxi: { riskAppetite: 3, cognitiveBias: 4, socialDependency: -3 },
+  larper: { socialDependency: 3, cognitiveBias: 2, greedIndex: 2 },
+  dev: { riskAppetite: 2, emotionalControl: 2, cognitiveBias: -2 },
+  npc: { socialDependency: 4, emotionalControl: -2, cognitiveBias: 3 },
 };

@@ -1,4 +1,4 @@
-import { TagType, QUESTIONS, RESULTS, Result } from './gameData';
+import { TagType, QUESTIONS, RESULTS, Result, getOptionById } from './gameData';
 import {
   DimensionScores,
   SurvivalRating,
@@ -85,60 +85,94 @@ export function calculateDimensionScores(selectedIds: string[]): DimensionScores
 }
 
 /**
- * Calculate Madness Score based on dimension scores
- * The madness score is a weighted combination of dimension scores
+ * Calculate Madness Score based on selected options' madnessImpact
+ * 直接基于选项的疯狂影响值计算，更准确反映用户选择
+ * 
+ * @param selectedIds - Array of selected option IDs
+ * @returns Madness score in range 0-100
+ */
+export function calculateMadnessScoreFromSelections(selectedIds: string[]): number {
+  // 基础分数 30 分（中等偏低）
+  let madnessScore = 30;
+  
+  // 遍历所有选项，累加 madnessImpact
+  selectedIds.forEach((id) => {
+    const opt = getOptionById(id);
+    if (opt) {
+      // 如果选项有 madnessImpact，直接使用
+      const impact = (opt as any).madnessImpact;
+      if (typeof impact === 'number') {
+        madnessScore += impact * 0.8; // 缩放系数，避免爆表
+      } else {
+        // 没有 madnessImpact 的选项，根据 tag 给默认值
+        const tagImpacts: Record<string, number> = {
+          degen: 4, rekt: 3, holder: 1, slave: 2, shark: -1,
+          normie: 1, midcurve: 2, simp: 3, maxi: 3, larper: 2, dev: 1, npc: 2,
+        };
+        madnessScore += tagImpacts[opt.tag] || 2;
+      }
+    }
+  });
+
+  // 应用非线性变换，让分数分布更合理
+  // 20个选项，每个平均+2.5分 = 50分，加上基础30分 = 80分左右是极端情况
+  const normalized = Math.min(madnessScore / 100, 1);
+  const transformed = Math.pow(normalized, 0.9) * 100;
+
+  return Math.max(0, Math.min(100, Math.round(transformed)));
+}
+
+/**
+ * Calculate Madness Score based on dimension scores (保留兼容)
  * 
  * @param dimensionScores - The calculated dimension scores
  * @returns Madness score in range 0-100
  */
 export function calculateMadnessScore(dimensionScores: DimensionScores): number {
-  // Weights for each dimension contributing to madness
-  // Higher risk appetite, cognitive bias, social dependency, and greed increase madness
-  // Higher emotional control decreases madness
   const weights = {
-    riskAppetite: 0.25,
-    emotionalControl: -0.20, // Negative weight - higher control = lower madness
-    cognitiveBias: 0.20,
-    socialDependency: 0.15,
-    greedIndex: 0.20,
+    riskAppetite: 0.22,
+    emotionalControl: -0.18,
+    cognitiveBias: 0.18,
+    socialDependency: 0.12,
+    greedIndex: 0.18,
   };
 
-  // Calculate weighted sum
-  let madnessScore = 0;
+  let rawScore = 0;
   (Object.keys(weights) as (keyof typeof weights)[]).forEach((dimension) => {
     const weight = weights[dimension];
     const score = dimensionScores[dimension];
     
     if (weight < 0) {
-      // For emotional control, invert the contribution
-      // High emotional control (100) should reduce madness
-      madnessScore += Math.abs(weight) * (100 - score);
+      rawScore += Math.abs(weight) * (100 - score);
     } else {
-      madnessScore += weight * score;
+      rawScore += weight * score;
     }
   });
 
-  // Clamp to 0-100 range
-  return Math.max(0, Math.min(100, Math.round(madnessScore)));
+  const normalized = rawScore / 100;
+  const transformed = Math.pow(normalized, 0.9) * 100;
+
+  return Math.max(0, Math.min(100, Math.round(transformed)));
 }
 
 /**
  * Calculate Survival Rating based on madness score
  * Maps madness score to one of five survival ratings
+ * 调整后的阈值让分布更合理
  * 
  * @param madnessScore - The calculated madness score (0-100)
  * @returns SurvivalRating string
  */
 export function calculateSurvivalRating(madnessScore: number): SurvivalRating {
   if (madnessScore >= SURVIVAL_RATING_THRESHOLDS.LEEK) {
-    return '韭菜';
+    return '韭菜';           // >= 75: 最惨，纯韭菜
   } else if (madnessScore >= SURVIVAL_RATING_THRESHOLDS.OLD_LEEK) {
-    return '老韭菜';
+    return '老韭菜';         // 55-74: 被割过很多次了
   } else if (madnessScore >= SURVIVAL_RATING_THRESHOLDS.LEEK_KING) {
-    return '韭菜王';
+    return '韭菜王';         // 40-54: 韭菜中的战斗机
   } else if (madnessScore >= SURVIVAL_RATING_THRESHOLDS.SICKLE_TRAINEE) {
-    return '镰刀预备役';
+    return '镰刀预备役';     // 25-39: 开始学会割人了
   } else {
-    return '终极镰刀';
+    return '终极镰刀';       // < 25: 真正的镰刀
   }
 }
